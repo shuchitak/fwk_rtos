@@ -12,8 +12,9 @@ static uint8_t spi_xfer_tx_buf[SPI_XFER_TX_SIZE];
 
 RTOS_SPI_SLAVE_CALLBACK_ATTR
 void device_control_spi_start_cb(rtos_spi_slave_t *ctx,
-                                 device_control_t *device_control_ctx)
+                                 void *args)
 {
+    device_control_t *device_control_ctx = (device_control_t*)args;
     for(int i=0; i<8; i++)
     {
         spi_xfer_tx_buf[i] = 5;
@@ -35,8 +36,9 @@ void device_control_spi_start_cb(rtos_spi_slave_t *ctx,
 
 RTOS_SPI_SLAVE_CALLBACK_ATTR
 void device_control_spi_xfer_done_cb(rtos_spi_slave_t *ctx,
-                                     device_control_t *device_control_ctx)
+                                     void *args)
 {
+    device_control_t *device_control_ctx = (device_control_t*)args;
     uint8_t *rx_buf, *tx_buf;
     size_t rx_len, tx_len;
 

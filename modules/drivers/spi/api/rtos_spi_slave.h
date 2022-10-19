@@ -16,6 +16,9 @@
 
 #include "rtos_osal.h"
 #include "rtos_driver_rpc.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * This attribute must be specified on all RTOS SPI slave callback functions
@@ -202,5 +205,7 @@ void rtos_spi_slave_init(
         port_t p_cs);
 
 /**@}*/
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* RTOS_SPI_SLAVE_H_ */

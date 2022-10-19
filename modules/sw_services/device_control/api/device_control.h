@@ -11,7 +11,9 @@
 
 #include "rtos_osal.h"
 #include "rtos_intertile.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * \defgroup device_control_xcore
  *
@@ -300,5 +302,7 @@ control_ret_t device_control_init(device_control_t *ctx,
                                   size_t intertile_count);
 
 /**@}*/
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* DEVICE_CONTROL_H_ */

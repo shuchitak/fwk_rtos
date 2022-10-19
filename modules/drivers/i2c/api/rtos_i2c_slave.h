@@ -17,6 +17,9 @@
 #include "rtos_osal.h"
 #include "rtos_driver_rpc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * The maximum number of bytes that a the RTOS I2C slave driver can receive from a master
  * in a single write transaction.
@@ -247,5 +250,7 @@ void rtos_i2c_slave_init(
         uint8_t device_addr);
 
 /**@}*/
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* RTOS_I2C_SLAVE_H_ */
