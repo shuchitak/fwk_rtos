@@ -38,11 +38,13 @@ control_write_command(control_resid_t resid, control_cmd_t cmd,
 
   do
   {
+      usleep(100);
       int data_len = control_build_spi_data(data_sent_recieved, resid, cmd, payload, payload_len);
       bcm2835_spi_transfern((char *)data_sent_recieved, data_len);
   }while(data_sent_recieved[0] == CONTROL_COMMAND_IGNORED_IN_DEVICE);
   do
   {
+      usleep(100);
       // get status
       memset(data_sent_recieved, 0, SPI_TRANSACTION_MAX_BYTES);
       unsigned transaction_length = payload_len < 8 ? 8 : payload_len;  
@@ -61,6 +63,7 @@ control_read_command(control_resid_t resid, control_cmd_t cmd,
   //printf("control_read_command(): resid 0x%x, cmd_id 0x%x, payload_len 0x%x\n",resid, cmd, payload_len);
   do
   {
+      usleep(100);
       int data_len = control_build_spi_data(data_sent_recieved, resid, cmd, payload, payload_len);
       bcm2835_spi_transfern((char *)data_sent_recieved, data_len);
 
@@ -68,6 +71,7 @@ control_read_command(control_resid_t resid, control_cmd_t cmd,
   
   do
   {
+      usleep(100);
       memset(data_sent_recieved, 0, SPI_TRANSACTION_MAX_BYTES);
       unsigned transaction_length = payload_len < 8 ? 8 : payload_len;  
 
