@@ -10,6 +10,7 @@
 
 #include "rtos_interrupt.h"
 #include "rtos_mic_array.h"
+#include "platform/mic_array_custom.h"
 
 #undef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -29,8 +30,11 @@ static void mic_array_thread(rtos_mic_array_t *ctx)
      * it appears to assume that KEDI is not set, therefore it is cleared here.
      */
     CLRSR(XS1_SR_KEDI_MASK);
-
+#if (MIC_ARRAY_SAMPLING_FREQ == 48000)
+    ma_task(ctx->c_pdm_mic.end_a);
+#else
     ma_vanilla_task(ctx->c_pdm_mic.end_a);
+#endif
 }
 
 DEFINE_RTOS_INTERRUPT_CALLBACK(rtos_mic_array_isr, arg)
@@ -175,8 +179,11 @@ void rtos_mic_array_init(
     mic_array_ctx->format = format;
 
     xassert(format < RTOS_MIC_ARRAY_FORMAT_COUNT);
-
+#if (MIC_ARRAY_SAMPLING_FREQ == 48000)
+    ma_init();
+#else
     ma_vanilla_init();
+#endif
 
     mic_array_ctx->rpc_config = NULL;
     mic_array_ctx->rx = mic_array_local_rx;
