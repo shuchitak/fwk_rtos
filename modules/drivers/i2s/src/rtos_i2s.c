@@ -2,10 +2,12 @@
 // This Software is subject to the terms of the XMOS Public Licence: Version 1.
 
 #define DEBUG_UNIT RTOS_I2S
+#define DEBUG_PRINT_ENABLE_RTOS_I2S 0
 
 #include <string.h>
 
 #include "rtos_printf.h"
+#include <xcore/hwtimer.h>
 #include <xcore/assert.h>
 #include <xcore/triggerable.h>
 
@@ -40,11 +42,43 @@ static void i2s_init(rtos_i2s_t *ctx, i2s_config_t *i2s_config)
 {
     i2s_config->mode = ctx->mode;
     i2s_config->mclk_bclk_ratio = ctx->mclk_bclk_ratio;
+    ctx->did_restart = true;
+    ctx->first_frame_after_restart = false;
+    ctx->i2s_callback_ticks = 0;
+    ctx->frame_counter = 0;
+    ctx->average_callback_time = 0;
 }
 
 I2S_CALLBACK_ATTR
 static i2s_restart_t i2s_restart_check(rtos_i2s_t *ctx)
 {
+    ctx->i2s_prev_callback_ticks = ctx->i2s_callback_ticks;
+    ctx->i2s_callback_ticks = get_reference_time();
+
+    // Add any extra code here if needed so it will be counted in the timing check.
+    if(ctx->did_restart == true)
+    {
+        ctx->did_restart = false;
+        ctx->first_frame_after_restart = true;
+        ctx->frame_counter = 0;
+    }
+    else if(ctx->first_frame_after_restart == true)
+    {
+        ctx->first_frame_after_restart = false;
+        ctx->callback_time = 0;
+    }
+    else // From the 2nd frame after restart, start counting
+    {
+        ctx->callback_time += (ctx->i2s_callback_ticks - ctx->i2s_prev_callback_ticks);
+        ctx->frame_counter += 1;
+        if(ctx->frame_counter == 256)
+        {
+            ctx->average_callback_time = ctx->callback_time >> 8; // Average over 256 frames
+            ctx->callback_time = 0;
+            ctx->frame_counter = 0;
+        }
+    }
+
     return I2S_NO_RESTART;
 }
 
@@ -60,7 +94,7 @@ static void i2s_receive(rtos_i2s_t *ctx, size_t num_in, const int32_t *i2s_sampl
             memcpy(&ctx->recv_buffer.buf[ctx->recv_buffer.write_index], i2s_sample_buf, num_in * sizeof(int32_t));
             buffer_words_written = num_in;
         } else {
-            // rtos_printf("i2s rx overrun\n");
+            rtos_printf("i2s rx overrun\n");
         }
     } else {
         /*
@@ -105,9 +139,14 @@ static void i2s_send(rtos_i2s_t *ctx, size_t num_out, int32_t *i2s_sample_buf)
         if (words_available >= num_out) {
             memcpy(i2s_sample_buf, &ctx->send_buffer.buf[ctx->send_buffer.read_index], num_out * sizeof(int32_t));
             buffer_words_read = num_out;
-        } else {
-            // rtos_printf("i2s tx underrun\n");
         }
+        /*else { // For debug, send a known value
+
+            for(int i=0; i<num_out; i++)
+            {
+                i2s_sample_buf[i] = 1717986918;
+            }
+        }*/
     } else {
         /*
          * The callback can't read past the end of the send buffer,
@@ -332,6 +371,9 @@ void rtos_i2s_start(
     i2s_ctx->mclk_bclk_ratio = mclk_bclk_ratio;
     i2s_ctx->mode = mode;
     i2s_ctx->isr_cmd = 0;
+    i2s_ctx->did_restart = false;
+    i2s_ctx->i2s_callback_ticks = 0;
+    i2s_ctx->i2s_prev_callback_ticks = 0;
 
     memset(&i2s_ctx->recv_buffer, 0, sizeof(i2s_ctx->send_buffer));
     if (i2s_ctx->num_in > 0) {

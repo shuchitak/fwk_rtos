@@ -10,7 +10,7 @@
  * The public API for using the RTOS I2S driver.
  * @{
  */
-
+#include <stdbool.h>
 #include <xcore/clock.h>
 #include <xcore/port.h>
 #include "i2s.h"
@@ -129,6 +129,14 @@ struct rtos_i2s_struct{
     rtos_osal_semaphore_t recv_sem;
     int send_blocked;
     int recv_blocked;
+    bool did_restart;
+    bool first_frame_after_restart;
+    uint32_t i2s_callback_ticks;
+    uint32_t i2s_prev_callback_ticks;
+    uint32_t callback_time;
+    uint32_t average_callback_time;
+    uint32_t frame_counter;
+
     struct {
         int32_t *buf;
         size_t buf_size;
