@@ -136,6 +136,7 @@ struct rtos_i2s_struct{
     uint32_t callback_time;
     uint32_t average_callback_time;
     uint32_t frame_counter;
+    uint32_t write_256samples_time;
 
     struct {
         int32_t *buf;

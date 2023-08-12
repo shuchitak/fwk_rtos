@@ -88,6 +88,17 @@ static void i2s_receive(rtos_i2s_t *ctx, size_t num_in, const int32_t *i2s_sampl
     size_t words_available = ctx->recv_buffer.total_written - ctx->recv_buffer.total_read;
     size_t words_free = ctx->recv_buffer.buf_size - words_available;
     size_t buffer_words_written = 0;
+    static uint32_t prev_ts = 0;
+    static size_t window_written = 0;
+
+    window_written += 1;
+    if(window_written == 3840)
+    {
+        uint32_t current_ts = get_reference_time();
+        ctx->write_256samples_time = current_ts - prev_ts;
+        window_written = 0;
+        prev_ts = current_ts;
+    }
 
     if (ctx->receive_filter_cb == NULL) {
         if (num_in <= words_free) {
@@ -140,13 +151,13 @@ static void i2s_send(rtos_i2s_t *ctx, size_t num_out, int32_t *i2s_sample_buf)
             memcpy(i2s_sample_buf, &ctx->send_buffer.buf[ctx->send_buffer.read_index], num_out * sizeof(int32_t));
             buffer_words_read = num_out;
         }
-        /*else { // For debug, send a known value
+        else { // For debug, send a known value
 
             for(int i=0; i<num_out; i++)
             {
                 i2s_sample_buf[i] = 1717986918;
             }
-        }*/
+        }
     } else {
         /*
          * The callback can't read past the end of the send buffer,
