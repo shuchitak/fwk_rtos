@@ -37,6 +37,53 @@ DEFINE_RTOS_INTERRUPT_CALLBACK(rtos_i2s_isr, arg)
     }
 }
 
+static inline bool in_range(uint32_t ticks, uint32_t ref)
+{
+    if((ticks >= (ref-5)) && (ticks <= (ref+5)))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+static inline uint32_t detect_i2s_sampling_rate(uint32_t average_callback_ticks)
+{
+    if(in_range(average_callback_ticks, 2267))
+    {
+        return 44100;
+    }
+    else if(in_range(average_callback_ticks, 2083))
+    {
+        return 48000;
+    }
+    else if(in_range(average_callback_ticks, 1133))
+    {
+        return 88200;
+    }
+    else if(in_range(average_callback_ticks, 1041))
+    {
+        return 96000;
+    }
+    else if(in_range(average_callback_ticks, 566))
+    {
+        return 176400;
+    }
+    else if(in_range(average_callback_ticks, 520))
+    {
+        return 192000;
+    }
+    else if(average_callback_ticks == 0)
+    {
+        return 0;
+    }
+    printf("ERROR: avg_callback_ticks %lu do not match any sampling rate!!\n", average_callback_ticks);
+    xassert(0);
+    return 0xffffffff;
+}
+
 I2S_CALLBACK_ATTR
 static void i2s_init(rtos_i2s_t *ctx, i2s_config_t *i2s_config)
 {
@@ -47,6 +94,7 @@ static void i2s_init(rtos_i2s_t *ctx, i2s_config_t *i2s_config)
     ctx->i2s_callback_ticks = 0;
     ctx->frame_counter = 0;
     ctx->average_callback_time = 0;
+    ctx->i2s_nominal_sampling_rate = 0;
 }
 
 I2S_CALLBACK_ATTR
@@ -69,13 +117,18 @@ static i2s_restart_t i2s_restart_check(rtos_i2s_t *ctx)
     }
     else // From the 2nd frame after restart, start counting
     {
-        ctx->callback_time += (ctx->i2s_callback_ticks - ctx->i2s_prev_callback_ticks);
-        ctx->frame_counter += 1;
-        if(ctx->frame_counter == 256)
+        if(ctx->average_callback_time == 0) // only do it once after i2s_init
         {
-            ctx->average_callback_time = ctx->callback_time >> 8; // Average over 256 frames
-            ctx->callback_time = 0;
-            ctx->frame_counter = 0;
+            ctx->callback_time += (ctx->i2s_callback_ticks - ctx->i2s_prev_callback_ticks);
+            ctx->frame_counter += 1;
+            if(ctx->frame_counter == 256)
+            {
+                ctx->average_callback_time = ctx->callback_time >> 8;
+                ctx->i2s_nominal_sampling_rate  = detect_i2s_sampling_rate(ctx->average_callback_time);
+                ctx->callback_time = 0;
+                ctx->frame_counter = 0;
+
+            }
         }
     }
 
@@ -147,7 +200,7 @@ static void i2s_send(rtos_i2s_t *ctx, size_t num_out, int32_t *i2s_sample_buf)
     size_t buffer_words_read = 0;
 
     if (ctx->send_filter_cb == NULL) {
-        if (words_available >= num_out) {
+        if ((words_available >= num_out) && (ctx->okay_to_send == true)) {
             memcpy(i2s_sample_buf, &ctx->send_buffer.buf[ctx->send_buffer.read_index], num_out * sizeof(int32_t));
             buffer_words_read = num_out;
         }
@@ -385,6 +438,7 @@ void rtos_i2s_start(
     i2s_ctx->did_restart = false;
     i2s_ctx->i2s_callback_ticks = 0;
     i2s_ctx->i2s_prev_callback_ticks = 0;
+    i2s_ctx->okay_to_send = false;
 
     memset(&i2s_ctx->recv_buffer, 0, sizeof(i2s_ctx->send_buffer));
     if (i2s_ctx->num_in > 0) {
