@@ -135,6 +135,7 @@ control_write_command(control_resid_t resid, control_cmd_t cmd,
     return CONTROL_ERROR;
   }
 
+  return CONTROL_SUCCESS;
   // Read back write command status
   uint8_t status;
   control_usb_fill_header(&windex, &wvalue, &wlength,
