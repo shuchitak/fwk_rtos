@@ -39,7 +39,7 @@ control_xscope_create_upload_buffer(uint32_t buffer[XSCOPE_UPLOAD_MAX_WORDS],
 #endif
 
 #if USE_USB
-#define USB_TRANSACTION_MAX_BYTES 64
+#define USB_TRANSACTION_MAX_BYTES 256
 static inline void
 control_usb_fill_header(uint16_t *windex, uint16_t *wvalue, uint16_t *wlength,
                         control_resid_t resid, control_cmd_t cmd, unsigned payload_len)
