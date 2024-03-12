@@ -5,7 +5,7 @@
 
 #include "device_control_shared.h"
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -30,64 +30,55 @@ typedef enum spi_mode_t {
  * @{
  */
 
-// #if USE_SPI
-// /* Taken from spi.h in lib_spi. Not included as it's an XC header */
-// /* TODO: Wrap spi.h in #ifdef __XC__ */
-// typedef enum spi_mode_t {
-//   SPI_MODE_0, /**< SPI Mode 0 - Polarity = 0, Clock Edge = 0 */
-//   SPI_MODE_1, /**< SPI Mode 1 - Polarity = 0, Clock Edge = 1 */
-//   SPI_MODE_2, /**< SPI Mode 2 - Polarity = 1, Clock Edge = 0 */
-//   SPI_MODE_3, /**< SPI Mode 3 - Polarity = 1, Clock Edge = 1 */
-// } spi_mode_t;
-// #endif
 
-// #if USE_XSCOPE  || __DOXYGEN__
-// /** Initialize the xscope host interface
-//  *
-//  *  \param host_str    String containing the name of the xscope host. Eg. "localhost"
-//  *  \param port_str    String containing the port number of the xscope host
-//  *
-//  *  \returns           Whether the initialization was successful or not
-//  */
-// control_ret_t control_init_xscope(const char *host_str, const char *port_str);
-// /** Shutdown the xscope host interface
-//  *
-//  *  \returns           Whether the shutdown was successful or not
-//  */
-// control_ret_t control_cleanup_xscope(void);
-// #endif
 
-// #if USE_SPI  || __DOXYGEN__
-// #if RPI
-// #include "bcm2835.h"
-// /** Initialize the SPI host (master) interface for the Raspberry Pi
-//  *
-//  *  \param spi_mode             Mode that the SPI will run in
-//  *  \param clock_divider        The amount to divide the Raspberry Pi's clock by, e.g.
-//  *                              BCM2835_SPI_CLOCK_DIVIDER_1024 gives a clock of ~122kHz
-//  *                              on the RPI 2.
-//  *  \param delay_for_read       Delay between send and recieve for read command
-//  *
-//  *  \returns                    Whether the initialization was successful or not
-//  */
-// control_ret_t control_init_spi_pi(spi_mode_t spi_mode, bcm2835SPIClockDivider clock_divider, unsigned delay_for_read);
-// #else
-// /** Initialize the SPI host (master) interface
-//  *
-//  *  \param spi_mode             Mode that the SPI will run in
-//  *  \param spi_bitrate          Bitrate for SPI to run at
-//  *  \param delay_for_read       Delay between send and recieve for read command
-//  *
-//  *  \returns                    Whether the initialization was successful or not
-//  */
-// control_ret_t control_init_spi(spi_mode_t spi_mode, int spi_bitrate, unsigned delay_for_read);
-// #endif // RPI
-// /** Shutdown the SPI host (master) interface connection
-//  *
-//  *  \returns           Whether the shutdown was successful or not
-//  */
-// control_ret_t control_cleanup_spi(void);
-// #endif
+#if USE_XSCOPE  || __DOXYGEN__
+/** Initialize the xscope host interface
+ *
+ *  \param host_str    String containing the name of the xscope host. Eg. "localhost"
+ *  \param port_str    String containing the port number of the xscope host
+ *
+ *  \returns           Whether the initialization was successful or not
+ */
+control_ret_t control_init_xscope(const char *host_str, const char *port_str);
+/** Shutdown the xscope host interface
+ *
+ *  \returns           Whether the shutdown was successful or not
+ */
+control_ret_t control_cleanup_xscope(void);
+#endif
+
+#if USE_SPI  || __DOXYGEN__
+#if RPI
+#include "bcm2835.h"
+/** Initialize the SPI host (master) interface for the Raspberry Pi
+ *
+ *  \param spi_mode             Mode that the SPI will run in
+ *  \param clock_divider        The amount to divide the Raspberry Pi's clock by, e.g.
+ *                              BCM2835_SPI_CLOCK_DIVIDER_1024 gives a clock of ~122kHz
+ *                              on the RPI 2.
+ *  \param delay_for_read       Delay between send and recieve for read command
+ *
+ *  \returns                    Whether the initialization was successful or not
+ */
+control_ret_t control_init_spi_pi(spi_mode_t spi_mode, bcm2835SPIClockDivider clock_divider, unsigned delay_for_read);
+#else
+/** Initialize the SPI host (master) interface
+ *
+ *  \param spi_mode             Mode that the SPI will run in
+ *  \param spi_bitrate          Bitrate for SPI to run at
+ *  \param delay_for_read       Delay between send and recieve for read command
+ *
+ *  \returns                    Whether the initialization was successful or not
+ */
+control_ret_t control_init_spi(spi_mode_t spi_mode, int spi_bitrate, unsigned delay_for_read);
+#endif // RPI
+/** Shutdown the SPI host (master) interface connection
+ *
+ *  \returns           Whether the shutdown was successful or not
+ */
+control_ret_t control_cleanup_spi(void);
+#endif
 
 #if USE_I2C || __DOXYGEN__
 /** Initialize the I2C host (master) interface
@@ -152,11 +143,11 @@ control_ret_t control_init_spi(spi_mode_t spi_mode, int spi_bitrate, unsigned de
  */
 control_ret_t control_cleanup_spi(void);
 #endif
-//#if (!USE_USB && !USE_XSCOPE && !USE_I2C && !USE_SPI)
-#if (!USE_USB && !USE_I2C && !USE_SPI)
+
+#if (!USE_USB && !USE_I2C && !USE_SPI && !USE_XSCOPE)
 #error "Please specify transport for device control using USE_xxx define in build file"
-#error "Eg. -DUSE_I2C=1 or -DUSE_USB=1 or -DUSE_SPI=1"
-#endif 
+#error "Eg. -DUSE_I2C=1 or -DUSE_USB=1 or -DUSE_SPI=1 or -DUSE_XSCOPE=1"
+#endif
 
 #if USE_I2C && __xcore__
 /** Checks to see that the version of control library in the device is the same as the host

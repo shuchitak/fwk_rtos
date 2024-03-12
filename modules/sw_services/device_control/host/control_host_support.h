@@ -10,12 +10,28 @@
 #include "device_control_shared.h"
 
 #if USE_XSCOPE
+
+struct control_xscope_packet {
+  control_resid_t resid;
+  control_cmd_t cmd;
+  uint8_t payload_len;
+  uint8_t pad;
+};
+
+// hard limit of 256 bytes for xSCOPE uploads
+#define XSCOPE_UPLOAD_MAX_BYTES (XSCOPE_UPLOAD_MAX_WORDS * 4)
+#define XSCOPE_UPLOAD_MAX_WORDS 64
+// subtract the header size from the total upload size
+#define XSCOPE_DATA_MAX_BYTES (XSCOPE_UPLOAD_MAX_BYTES - 4)
+
+#define XSCOPE_CONTROL_PROBE "Control Probe"
+
 static inline size_t
 control_xscope_create_upload_buffer(uint32_t buffer[XSCOPE_UPLOAD_MAX_WORDS],
                                     control_cmd_t cmd, control_resid_t resid,
                                     const uint8_t *payload, unsigned payload_len)
 {
-  const size_t header_size = sizeof(struct control_xscope_response);
+  const size_t header_size = sizeof(struct control_xscope_packet);
   struct control_xscope_packet *p;
 
   p = (struct control_xscope_packet*)buffer;
