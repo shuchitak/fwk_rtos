@@ -4,9 +4,7 @@
 #include <string.h>
 #include <signal.h>
 #include <assert.h>
-#ifndef _WIN32
 #include <stdbool.h>
-#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include "xscope_endpoint.h"
